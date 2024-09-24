@@ -23,6 +23,11 @@ const parser = yargs(process.argv.slice(2))
       demandOption: true,
       describe: 'The new version of the updated package',
     },
+    'isLockFileMaintenance': {
+      type: 'boolean',
+      demandOption: true,
+      describe: 'Whether or not the Renovate changes are lock file maintenance',
+    },
     format: {
       type: 'string',
       describe: 'The changelog format',
@@ -43,7 +48,7 @@ const parser = yargs(process.argv.slice(2))
   .example('$0 --dep-name my-updated-package --current-version 1.0.0 --new-version 2.0.0', '');
 
 (async () => {
-  const { format, path, depName, newVersion, currentVersion, ignoreFailure } = await parser.argv;
+  const { format, path, depName, newVersion, currentVersion, isLockFileMaintenance, ignoreFailure } = await parser.argv;
   let changelogBuffer;
   try {
     changelogBuffer = await fs.readFile(path);
@@ -59,7 +64,7 @@ const parser = yargs(process.argv.slice(2))
     throw new Error(`Unsupported changelog format "${format}"`);
   }
   try {
-    await fs.writeFile(path, changelogUpdater(changelogBuffer.toString(), depName, currentVersion, newVersion));
+    await fs.writeFile(path, changelogUpdater(changelogBuffer.toString(), depName, currentVersion, newVersion, isLockFileMaintenance));
   } catch (e) {
     if (!ignoreFailure) {
       throw e;

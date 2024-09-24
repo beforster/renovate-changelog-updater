@@ -3,6 +3,7 @@
 const { Release, Change, parser: keepAChangelogParser } = require('keep-a-changelog');
 
 const dependencyListTitle = 'Dependency updates\\';
+const terraformMaintenanceTitle = 'Terraform lock file maintenance';
 
 /**
  *
@@ -20,6 +21,7 @@ function getChangeDescription(depName, currentVersion, newVersion) {
  * @param {string} depName
  * @param {string} currentVersion
  * @param {string} newVersion
+ * @param {boolean} isLockFileMaintenance
  * @returns {string} the updated changelog
  */
 function keepAChangelogUpdater(changelogRaw, depName, currentVersion, newVersion) {
@@ -32,6 +34,19 @@ function keepAChangelogUpdater(changelogRaw, depName, currentVersion, newVersion
   } else {
     unReleased = firstRelease;
   }
+
+  // Handle lock file maintenance scenario
+  if (isLockFileMaintenance) {
+    const changedEntries = unReleased.changes.get('changed');
+    let lockFileChange = changedEntries?.find(change => change.title === terraformMaintenanceTitle);
+
+    if (!lockFileChange) {
+      unReleased.addChange('changed', new Change(terraformMaintenanceTitle));
+    }
+    return changelog.toString();
+  }
+
+  // Regular behavior for other dependencies
   const changedEntries = unReleased.changes.get('changed');
   let dependendyChanged = changedEntries?.find((changed) => changed.title.match(new RegExp(`^${dependencyListTitle}\n?`)));
   if (!dependendyChanged) {
